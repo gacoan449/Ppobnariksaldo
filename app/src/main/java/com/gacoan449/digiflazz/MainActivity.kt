@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         fun field(h: String, secret: Boolean = false) = EditText(this).apply {
             hint = h
-            singleLine = true
+            setSingleLine(true)
             if (secret) {
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             }
