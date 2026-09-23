@@ -37,9 +37,26 @@ jobs:
       - name: Build release APK
         run: gradle --no-daemon :app:assembleRelease
 
+      - name: Locate and normalize APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "APK files produced by Gradle:"
+          find app/build/outputs/apk/release -maxdepth 1 -type f -name "*.apk" -print
+
+          APK_PATH="$(find app/build/outputs/apk/release -maxdepth 1 -type f -name "*.apk" -print -quit)"
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: No APK was produced."
+            exit 1
+          fi
+
+          cp "$APK_PATH" app-release.apk
+          echo "Normalized APK: app-release.apk"
+          ls -lh app-release.apk
+
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Digiflazz-Balance-Emptier
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app-release.apk
           if-no-files-found: error
