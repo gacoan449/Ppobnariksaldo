@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             adapter = ArrayAdapter(
                 this@MainActivity,
                 android.R.layout.simple_spinner_dropdown_item,
-                listOf("Token PLN", "GoPay", "ShopeePay")
+                listOf("Token PLN", "GoPay", "ShopeePay", "DANA")
             )
         }
         sku = field("buyer_sku_code — isi SKU sesuai produk di akun Digiflazz")
@@ -76,7 +76,8 @@ class MainActivity : AppCompatActivity() {
                 customer.hint = when (position) {
                     0 -> "Customer ID PLN"
                     1 -> "Nomor HP GoPay"
-                    else -> "Nomor HP ShopeePay"
+                    2 -> "Nomor HP ShopeePay"
+                    else -> "Nomor HP DANA"
                 }
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
