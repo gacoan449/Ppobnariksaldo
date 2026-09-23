@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var amount: EditText
     private lateinit var result: TextView
     private lateinit var developmentMode: CheckBox
+    private lateinit var product: Spinner
     private var last: JSONObject? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,8 +44,19 @@ class MainActivity : AppCompatActivity() {
 
         username = field("Digiflazz username")
         apiKey = field("Digiflazz API key", true)
-        sku = field("buyer_sku_code")
-        customer = field("Customer ID / nomor GoPay")
+        val productLabel = TextView(this).apply {
+            text = "Produk"
+            setPadding(0, 12, 0, 4)
+        }
+        product = Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@MainActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                listOf("Token PLN", "GoPay", "ShopeePay")
+            )
+        }
+        sku = field("buyer_sku_code — isi SKU sesuai produk di akun Digiflazz")
+        customer = field("Customer ID / nomor HP")
         amount = field("Nominal (contoh 10000)")
 
         developmentMode = CheckBox(this).apply {
@@ -56,8 +68,19 @@ class MainActivity : AppCompatActivity() {
         val retry = Button(this).apply { text = "CEK ULANG PENDING TERAKHIR" }
         result = TextView(this).apply { text = "Siap." }
 
-        listOf(info, username, apiKey, sku, customer, amount, developmentMode, buy, retry, result)
+        listOf(info, username, apiKey, productLabel, product, sku, customer, amount, developmentMode, buy, retry, result)
             .forEach { box.addView(it) }
+
+        product.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                customer.hint = when (position) {
+                    0 -> "Customer ID PLN"
+                    1 -> "Nomor HP GoPay"
+                    else -> "Nomor HP ShopeePay"
+                }
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+        }
 
         setContentView(ScrollView(this).apply { addView(box) })
 
