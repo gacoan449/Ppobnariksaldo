@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digiflazz Balance Emptier</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0b0f14;color:#eef2f6}.wrap{max-width:680px;margin:auto;padding:24px}.card{background:#121821;border:1px solid #27313d;border-radius:18px;padding:20px;margin-bottom:16px}h1{font-size:24px;margin:0 0 6px}p{color:#aeb9c5}.grid{display:grid;gap:12px}label{font-size:13px;color:#b8c2cc}input,select,button{width:100%;padding:13px;border-radius:10px;border:1px solid #344150;background:#0d131b;color:#fff;font-size:15px}button{cursor:pointer;background:#e8eef5;color:#0b0f14;font-weight:700;border:0}button.secondary{background:#263240;color:#fff}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.result{white-space:pre-wrap;word-break:break-word;background:#090d12;border-radius:10px;padding:12px;font-family:ui-monospace,monospace;font-size:12px;min-height:80px}.small{font-size:12px;color:#8e9baa}.danger{color:#ffb4ab}@media(max-width:520px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Digiflazz Balance Emptier</h1>
+    <p>Transaksi pembelian prabayar PLN Token / GoPay. API key tetap di server lokal.</p>
+  </div>
+
+  <div class="card grid">
+    <div class="row">
+      <div><label>Produk</label><select id="product"><option value="pln">Token PLN</option><option value="gopay">GoPay</option></select></div>
+      <div><label>Nominal</label><select id="amount"><option value="10000">Rp10.000</option><option value="20000">Rp20.000</option><option value="50000">Rp50.000</option><option value="100000">Rp100.000</option><option value="200000">Rp200.000</option></select></div>
+    </div>
+    <div><label>Nomor tujuan</label><input id="customer" inputmode="numeric" placeholder="ID PLN / nomor GoPay"></div>
+    <div><label>buyer_sku_code</label><input id="sku" placeholder="SKU persis dari akun Digiflazz"></div>
+    <div class="small">SKU tidak saya hardcode karena buyer_sku_code adalah kode produk milik akun seller. Masukkan SKU yang benar agar nominal tidak salah.</div>
+    <button id="buy">Kirim Transaksi</button>
+  </div>
+
+  <div class="card grid">
+    <button class="secondary" id="status">Cek ulang transaksi terakhir (Pending)</button>
+    <div id="result" class="result">Belum ada transaksi.</div>
+    <div class="small">Untuk Pending, gunakan ref_id yang sama. Jangan mengirim cek berulang-ulang dengan interval &lt; 1 menit.</div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let last=null;
+
+function show(x){ $("result").textContent=typeof x==="string"?x:JSON.stringify(x,null,2); }
+
+$("product").addEventListener("change",()=>{
+  $("customer").placeholder=$("product").value==="pln"?"ID Pelanggan PLN":"Nomor GoPay";
+});
+
+$("buy").onclick=async()=>{
+  const product=$("product").value, amount=Number($("amount").value);
+  const customer=$("customer").value.trim(), sku=$("sku").value.trim();
+  if(!customer||!sku) return show("Isi nomor tujuan dan buyer_sku_code.");
+  if(product==="pln" && customer.length<10) return show("ID PLN tampak terlalu pendek.");
+  if(product==="gopay" && !/^08\\d{8,13}$/.test(customer)) return show("Nomor GoPay harus diawali 08 dan berupa angka.");
+  try{
+    const r=await fetch("/api/transaction",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({product,buyer_sku_code:sku,customer_no:customer,amount})});
+    const x=await r.json(); show(x);
+    if(x.request){ last={buyer_sku_code:x.request.buyer_sku_code,customer_no:x.request.customer_no,ref_id:x.request.ref_id}; }
+  }catch(e){show("Error: "+e.message)}
+};
+
+$("status").onclick=async()=>{
+  if(!last) return show("Belum ada transaksi yang bisa dicek.");
+  try{
+    const r=await fetch("/api/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(last)});
+    show(await r.json());
+  }catch(e){show("Error: "+e.message)}
+};
+</script>
+</body>
+</html>
